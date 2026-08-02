@@ -1,6 +1,7 @@
 ---
 name: soad-framework
-description: Write code for the SØAD web framework — Jython transactions (*.py), Handlebars view templates (*.html), and the SQL the developer runs in the IDE's SQL editor. Use whenever a task involves building, editing, or explaining SØAD application code: transactions, views, models, routing, CRUD apps, file upload, JSON/AJAX/htmx endpoints, DataTables, Excel/PDF/email output. Also use when working in a local SØAD project that syncs via the soad CLI (soad pull / push / create) — e.g. a src/ tree of group/code/code.py and _code/ html view files, or a .config.json / .soad-checksums.json present. SØAD is also written SOAD or soad.
+description: >-
+  Write code for the SØAD web framework — Jython transactions (*.py), Handlebars view templates (*.html), and the SQL the developer runs in the IDE's SQL editor. Use whenever a task involves building, editing, or explaining SØAD application code: transactions, views, models, routing, CRUD apps, file upload, JSON/AJAX/htmx endpoints, DataTables, Excel/PDF/email output. Also use when working in a local SØAD project that syncs via the soad CLI (soad pull / push / create) — e.g. a src/ tree of group/code/code.py and _code/ html view files, or a .config.json / .soad-checksums.json present. SØAD is also written SOAD or soad.
 ---
 
 # SØAD Framework
