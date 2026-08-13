@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-REPO="webgeaz/soadcli"
-BINARY="soad"
+REPO="Webgeaz-Sdn-Bhd/soadcli"
+BINARY="soadcli"
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
