@@ -18,7 +18,7 @@ echo "Downloading $BINARY..."
 curl -fsSL "$URL" -o /tmp/$BINARY.tar.gz
 
 tar -xzf /tmp/$BINARY.tar.gz -C /tmp
-chmod +x /tmp/$BINARY
-sudo mv /tmp/$BINARY /usr/local/bin/$BINARY
+chmod +x /tmp/soad
+sudo mv /tmp/soad /usr/local/bin/soad
 
 echo "$BINARY installed!"
