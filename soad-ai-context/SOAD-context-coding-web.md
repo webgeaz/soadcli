@@ -464,26 +464,32 @@ Layout HTML uses placeholders `{{&title}}`, `{{&head}}`, `{{&body}}`; the page v
 
 ## File Upload
 
-The form needs `method="post"` and `enctype="multipart/form-data"`. SØAD exposes **three** request parameters per `<input type="file" name="X">`:
+The form must use `method="post"` and `enctype="multipart/form-data"` with an `<input type="file" name="X">`. SØAD exposes **three** request parameters per file input:
 
-- `X` → file content as `byte[]`
+- `X` → request-scoped `UploadedFile` object (**not** a `byte[]`)
 - `X_ft` → MIME type (e.g. `image/png`)
-- `X_fn` → original filename
+- `X_fn` → original filename (e.g. `photo.png`)
+
+```html
+<form action="{{ctxPath}}/t/upload/image/upload" method="post" enctype="multipart/form-data">
+  <input type="file" name="photo" required>
+  <button type="submit">Upload</button>
+</form>
+```
 
 ```python
 from utils import render
 from java.io import File
-from com.google.common.io import Files
 
 class Image(object):
     def upload(self, ctx):
-        """POST"""                            # exact docstring — POST-only
+        """POST"""                            # exact docstring — POST-only (mutating)
         request = ctx.getRequest()
-        content = request.getParameter("photo")      # byte[]
-        ftype   = request.getParameter("photo_ft")
-        fname   = request.getParameter("photo_fn")
+        uploaded_file = request.getParameter("photo")   # UploadedFile object
+        ftype   = request.getParameter("photo_ft")      # MIME type
+        fname   = request.getParameter("photo_fn")      # original filename
 
-        if not content:
+        if not uploaded_file or not fname:
             ctx.output["message"] = "Please select a file"
             ctx.go_to = render.as_view(ctx, "upload_status")
             return
@@ -493,11 +499,25 @@ class Image(object):
             ctx.go_to = render.as_view(ctx, "upload_status")
             return
 
-        Files.write(content, File("/tmp/uploads/" + fname))
+        # Check size BEFORE consuming the stream
+        if uploaded_file.getSize() > 5 * 1024 * 1024:
+            ctx.output["message"] = "File too large (max 5MB)"
+            ctx.go_to = render.as_view(ctx, "upload_status")
+            return
+
+        # writeTo() streams the file and is preferred for large uploads
+        uploaded_file.writeTo(File("/tmp/uploads/" + fname))
         ctx.output["message"] = "Uploaded: " + fname
         ctx.go_to = render.as_view(ctx, "upload_status")
 ```
-Validate type (`_ft`) and size (`len(content)`) before saving. To store in the DB instead, use a BLOB column and serve back with `render.as_blob(ctx, content, ftype, fname, attachment=False)`.
+
+`UploadedFile` methods include `getFileName()`, `getContentType()`, `getSize()`, `getInputStream()`, `writeTo(destination)`, and `getBytes()`.
+
+- Upload data is deleted automatically after the request finishes. Save or consume it inside the transaction; do not defer file access.
+- Prefer `getInputStream()` / `writeTo()` for large files. `getBytes()` loads the whole file into memory and should only be used after enforcing a small size limit.
+- Do **not** call `len(uploaded_file)` or `GuavaFiles.write(uploaded_file, ...)`: the parameter is an object, not `byte[]`. Use `getSize()` and `writeTo()`.
+- `maxfileuploadsize` limits each file; `maxrequestuploadsize` limits the complete multipart request (default: file limit + 1 MiB); `fileuploadtempdir` selects the spool directory (default: `${java.io.tmpdir}/soad-uploads`).
+- To store an upload in the DB, use a BLOB column. Setting `resume` also populates `resume_fn` and `resume_ft`; serve it with `render.as_blob(ctx, content, ftype, fname, attachment=False)`.
 
 ---
 
